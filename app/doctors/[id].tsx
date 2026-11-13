@@ -54,6 +54,7 @@ export default function BookDoctor() {
   const [slot, setSlot] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [bookError, setBookError] = useState<string | null>(null);
+  const [taken, setTaken] = useState<Set<number>>(new Set());
 
   const days = useMemo(nextDays, []);
 
@@ -73,6 +74,15 @@ export default function BookDoctor() {
       else setDoctor(d.data as Doctor);
       setAvailability((a.data as Availability[] | null) ?? []);
     });
+    // Times already taken with this doctor (no patient details are returned).
+    const from = new Date();
+    const to = new Date(from.getTime() + (DAYS_AHEAD + 1) * 24 * 60 * 60 * 1000);
+    supabase
+      .rpc('booked_slots', { p_doctor: id, p_from: from.toISOString(), p_to: to.toISOString() })
+      .then(({ data }) => {
+        const times = ((data as string[] | null) ?? []).map((iso) => new Date(iso).getTime());
+        setTaken(new Set(times));
+      });
   }, [id]);
 
   // Start times, in minutes after midnight, for the chosen day.
@@ -86,10 +96,12 @@ export default function BookDoctor() {
     const earliest = isToday ? now.getHours() * 60 + now.getMinutes() + 15 : 0;
     const out: number[] = [];
     for (let t = minutesOf(hours.start_time); t + doctor.slot_minutes <= minutesOf(hours.end_time); t += doctor.slot_minutes) {
-      if (t >= earliest) out.push(t);
+      const start = new Date(day);
+      start.setMinutes(t);
+      if (t >= earliest && !taken.has(start.getTime())) out.push(t);
     }
     return out;
-  }, [doctor, availability, days, dayIndex]);
+  }, [doctor, availability, days, dayIndex, taken]);
 
   if (loadError) return <Message text={loadError} />;
   if (!doctor) return <Loading />;

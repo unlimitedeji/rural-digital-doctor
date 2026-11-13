@@ -30,6 +30,9 @@ export default function Pay() {
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [method, setMethod] = useState<(typeof METHODS)[number]['id']>('wallet');
+  const [balance, setBalance] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!appointmentId) return;
@@ -42,7 +45,31 @@ export default function Pay() {
         if (err || !data) setError('Could not find this visit.');
         else setAppointment(data as unknown as Appointment);
       });
+    // Row level security returns only the signed-in user's own wallet.
+    supabase
+      .from('wallets')
+      .select('balance_kobo')
+      .maybeSingle()
+      .then(({ data }) => setBalance(data?.balance_kobo ?? 0));
   }, [appointmentId]);
+
+  async function payFromWallet() {
+    if (!appointment) return;
+    setBusy(true);
+    setPayError(null);
+    // The server checks the balance, takes the fee and confirms the visit in one step.
+    const { error: err } = await supabase.rpc('pay_with_wallet', { p_appointment: appointment.id });
+    setBusy(false);
+    if (err) {
+      setPayError(
+        err.message.includes('Not enough')
+          ? 'There is not enough money in your wallet. Add money or choose another way to pay.'
+          : 'Payment did not go through. Check your network and try again.',
+      );
+      return;
+    }
+    router.replace('/visits');
+  }
 
   if (error) return <Message text={error} />;
   if (!appointment) return <Loading />;
@@ -76,14 +103,23 @@ export default function Pay() {
           </Text>
         </View>
 
-        {/* TODO: connect the payment provider. Payment is confirmed on the server by the provider's webhook, never by the app. */}
-        <Text style={styles.pending}>
-          Payments are not switched on yet. Your time is held and shows under My visits as waiting for payment.
-        </Text>
+        {method === 'wallet' ? (
+          <Text style={styles.meta}>Wallet balance: {balance == null ? '…' : naira(balance)}</Text>
+        ) : (
+          // TODO: connect the payment provider. Its webhook confirms payment on the server, never the app.
+          <Text style={styles.pending}>
+            This way to pay is not switched on yet. Your time is held for 15 minutes and shows under My visits.
+          </Text>
+        )}
+        {payError ? <Text style={styles.error}>{payError}</Text> : null}
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button label="Go to my visits" variant="outline" onPress={() => router.replace('/visits')} />
+        {method === 'wallet' && appointment.status === 'pending_payment' ? (
+          <Button label={`Pay ${naira(appointment.fee_kobo)} from wallet`} onPress={payFromWallet} busy={busy} />
+        ) : (
+          <Button label="Go to my visits" variant="outline" onPress={() => router.replace('/visits')} />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -100,5 +136,6 @@ const styles = StyleSheet.create({
   safe: { backgroundColor: colors.brandTint, borderRadius: 14, padding: 12 },
   safeText: { fontSize: 13, lineHeight: 18, color: colors.brandDark },
   pending: { fontSize: 13, lineHeight: 19, color: colors.amberText, backgroundColor: colors.amberTint, borderRadius: 14, padding: 12 },
+  error: { fontSize: 14, lineHeight: 20, color: colors.danger },
   footer: { paddingHorizontal: 20, paddingVertical: 12, backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.line },
 });

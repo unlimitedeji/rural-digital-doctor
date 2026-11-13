@@ -30,6 +30,17 @@ export default function Visits() {
   const router = useRouter();
   const [visits, setVisits] = useState<Visit[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reloads, setReloads] = useState(0);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+
+  async function cancel(id: string) {
+    setCancelling(id);
+    // The server cancels the visit and refunds a paid visit to the wallet.
+    const { error: err } = await supabase.rpc('cancel_appointment', { p_appointment: id });
+    setCancelling(null);
+    if (err) setError('Could not cancel this visit. Check your network and try again.');
+    else setReloads((n) => n + 1);
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -49,7 +60,7 @@ export default function Visits() {
       return () => {
         active = false;
       };
-    }, [session?.user.id]),
+    }, [session?.user.id, reloads]),
   );
 
   if (error) return <Message text={error} />;
@@ -83,6 +94,9 @@ export default function Visits() {
                 label="Pay now"
                 onPress={() => router.push({ pathname: '/pay/[appointmentId]', params: { appointmentId: item.id } })}
               />
+            ) : null}
+            {item.status === 'pending_payment' || (item.status === 'confirmed' && new Date(item.starts_at) > new Date()) ? (
+              <Button label="Cancel visit" variant="outline" busy={cancelling === item.id} onPress={() => cancel(item.id)} />
             ) : null}
           </View>
         )}
