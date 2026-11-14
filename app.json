@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Rural Digital Doctor",
-    "slug": "rural-digital-doctor",
+    "slug": "dejiadenusi",
     "version": "0.1.0",
     "scheme": "ruraldigitaldoctor",
     "orientation": "portrait",
@@ -16,6 +16,7 @@
     "ios": {
       "bundleIdentifier": "com.ruraldigitaldoctor.app",
       "supportsTablet": false
-    }
+    },
+    "owner": "unlimitedejis-team"
   }
 }
