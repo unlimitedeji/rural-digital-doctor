@@ -15,6 +15,13 @@
           "cameraPermission": "Rural Digital Doctor uses the camera so you can photograph test results and scans for your doctor.",
           "photosPermission": "Rural Digital Doctor opens your photos so you can share test results and scans with your doctor."
         }
+      ],
+      "expo-web-browser",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Rural Digital Doctor uses Face ID to keep your health records private."
+        }
       ]
     ],
     "android": {

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui';
+import { googleSignInAvailable, signInWithGoogle } from '@/lib/google';
 import { supabase } from '@/lib/supabase';
 import { colors, radius } from '@/lib/theme';
 
@@ -12,6 +13,19 @@ export default function SignIn() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
+  const [googleReady, setGoogleReady] = useState(false);
+
+  useEffect(() => {
+    googleSignInAvailable().then(setGoogleReady);
+  }, []);
+
+  async function google() {
+    setNotice(null);
+    setBusy(true);
+    const error = await signInWithGoogle();
+    setBusy(false);
+    if (error) setNotice({ text: error, error: true });
+  }
 
   async function submit() {
     setNotice(null);
@@ -86,6 +100,7 @@ export default function SignIn() {
             ) : null}
 
             <Button label={creating ? 'Create account' : 'Sign in'} onPress={submit} busy={busy} />
+            {googleReady ? <Button label="Continue with Google" variant="outline" onPress={google} disabled={busy} /> : null}
             <Pressable
               accessibilityRole="button"
               onPress={() => {

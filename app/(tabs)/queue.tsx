@@ -2,6 +2,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FingerprintRow } from '@/components/FingerprintRow';
 import { Avatar, Loading } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
@@ -96,6 +97,7 @@ export default function Queue() {
           </View>
         }
         ListEmptyComponent={<Text style={styles.empty}>No paid visits waiting.</Text>}
+        ListFooterComponent={<FingerprintRow />}
         renderItem={({ item }) => (
           <Pressable
             accessibilityRole="button"

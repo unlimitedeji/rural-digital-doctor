@@ -2,6 +2,7 @@ import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FingerprintRow } from '@/components/FingerprintRow';
 import { Avatar, Button, Card } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { useProfile } from '@/lib/profile';
@@ -116,6 +117,9 @@ export default function Home() {
             </Pressable>
           ))
         )}
+
+        <Text style={styles.section}>Security</Text>
+        <FingerprintRow />
       </ScrollView>
     </SafeAreaView>
   );
