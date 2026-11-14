@@ -4,7 +4,7 @@ Mobile app (Android and iOS) for booking doctor visits, paying, video or audio c
 
 ## Status
 
-Version 0.1, first slice. **This code has not been installed or run yet.** It was written without access to a package registry, so the first job is to install, align versions and type-check.
+Version 0.1, first slice. The code installs, passes the type-check and bundles for Android. **It has not yet been run on a phone.**
 
 Working in code so far:
 
@@ -19,7 +19,6 @@ Not built yet: payments, video and audio calls, results and scans upload, prescr
 
 ```bash
 npm install
-npm run setup      # installs React Native and Expo packages at the versions that match the Expo SDK
 npm run typecheck
 npm start
 ```

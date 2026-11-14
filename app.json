@@ -6,7 +6,10 @@
     "scheme": "ruraldigitaldoctor",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      "expo-status-bar"
+    ],
     "android": {
       "package": "com.ruraldigitaldoctor.app"
     },
