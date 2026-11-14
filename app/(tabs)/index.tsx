@@ -1,9 +1,10 @@
-import { useFocusEffect, useRouter } from 'expo-router';
+import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Avatar, Button, Card } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
+import { useProfile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 import { colors, formatWhen, modeLabels, naira, radius, type VisitMode } from '@/lib/theme';
 
@@ -19,6 +20,7 @@ type DoctorRow = { id: string; display_name: string; specialty: string; fee_vide
 
 export default function Home() {
   const { session } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
   const [name, setName] = useState('');
   const [next, setNext] = useState<NextVisit | null>(null);
@@ -58,6 +60,9 @@ export default function Home() {
       };
     }, [session?.user.id]),
   );
+
+  // Doctors have their own screens; send them to their queue.
+  if (profile?.role === 'doctor') return <Redirect href="/queue" />;
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>

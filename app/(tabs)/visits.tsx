@@ -95,6 +95,13 @@ export default function Visits() {
                 onPress={() => router.push({ pathname: '/pay/[appointmentId]', params: { appointmentId: item.id } })}
               />
             ) : null}
+            {item.status === 'completed' || item.status === 'in_progress' ? (
+              <Button
+                label="View summary and medicine"
+                variant="outline"
+                onPress={() => router.push({ pathname: '/visit/[id]', params: { id: item.id } })}
+              />
+            ) : null}
             {item.status === 'pending_payment' || (item.status === 'confirmed' && new Date(item.starts_at) > new Date()) ? (
               <Button label="Cancel visit" variant="outline" busy={cancelling === item.id} onPress={() => cancel(item.id)} />
             ) : null}

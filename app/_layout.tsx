@@ -34,6 +34,8 @@ function Gate() {
       <Stack.Screen name="doctors/index" options={{ title: 'Find a doctor' }} />
       <Stack.Screen name="doctors/[id]" options={{ title: 'Book a visit' }} />
       <Stack.Screen name="pay/[appointmentId]" options={{ title: 'Pay for your visit' }} />
+      <Stack.Screen name="visit/[id]" options={{ title: 'Visit summary' }} />
+      <Stack.Screen name="doctor/visit/[id]" options={{ title: 'Patient visit' }} />
     </Stack>
   );
 }
