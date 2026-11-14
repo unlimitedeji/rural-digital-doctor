@@ -17,6 +17,11 @@
       "bundleIdentifier": "com.ruraldigitaldoctor.app",
       "supportsTablet": false
     },
-    "owner": "unlimitedejis-team"
+    "owner": "unlimitedejis-team",
+    "extra": {
+      "eas": {
+        "projectId": "961719ed-5a31-4b26-88ec-d261d097bb7d"
+      }
+    }
   }
 }
