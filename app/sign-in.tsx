@@ -1,3 +1,4 @@
+import * as Linking from 'expo-linking';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +19,24 @@ export default function SignIn() {
   useEffect(() => {
     googleSignInAvailable().then(setGoogleReady);
   }, []);
+
+  async function forgot() {
+    setNotice(null);
+    if (!email.trim()) {
+      setNotice({ text: 'Type your email above first, then tap Forgot password.', error: true });
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: Linking.createURL('reset-password'),
+    });
+    setBusy(false);
+    setNotice(
+      error
+        ? { text: 'Could not send the reset email. Wait a few minutes and try again.', error: true }
+        : { text: 'If that email has an account, a reset link is on its way. Open it on this phone.', error: false },
+    );
+  }
 
   async function google() {
     setNotice(null);
@@ -41,10 +60,21 @@ export default function SignIn() {
         options: { data: { full_name: fullName.trim() } },
       });
       if (error) setNotice({ text: error.message, error: true });
-      else if (!data.session) setNotice({ text: 'Check your email and tap the link to finish, then sign in.', error: false });
+      else if (data.user && data.user.identities?.length === 0) {
+        // Supabase sends no email when the address already has an account.
+        setCreating(false);
+        setNotice({ text: 'This email already has an account. Sign in, or tap Forgot password.', error: true });
+      } else if (!data.session) setNotice({ text: 'Check your email and tap the link to finish, then sign in.', error: false });
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (error) setNotice({ text: error.message, error: true });
+      if (error) {
+        setNotice({
+          text: error.message.includes('Invalid login')
+            ? 'Wrong email or password. Tap Forgot password to choose a new one.'
+            : error.message,
+          error: true,
+        });
+      }
     }
     setBusy(false);
   }
@@ -101,6 +131,11 @@ export default function SignIn() {
 
             <Button label={creating ? 'Create account' : 'Sign in'} onPress={submit} busy={busy} />
             {googleReady ? <Button label="Continue with Google" variant="outline" onPress={google} disabled={busy} /> : null}
+            {!creating ? (
+              <Pressable accessibilityRole="button" onPress={forgot} disabled={busy} style={styles.switch}>
+                <Text style={styles.switchText}>Forgot password?</Text>
+              </Pressable>
+            ) : null}
             <Pressable
               accessibilityRole="button"
               onPress={() => {

@@ -13,7 +13,7 @@ function Gate() {
   const lock = useLock();
   const segments = useSegments();
   const router = useRouter();
-  const mustUnlock = !!session && lock.locked;
+  const mustUnlock = !!session && lock.locked && segments[0] !== 'reset-password';
 
   // Ask for the fingerprint as soon as the lock screen appears.
   useEffect(() => {
@@ -24,7 +24,9 @@ function Gate() {
   useEffect(() => {
     if (loading) return;
     const onSignIn = segments[0] === 'sign-in';
-    if (!session && !onSignIn) router.replace('/sign-in');
+    // The password reset link opens the app before there is a session.
+    const onReset = segments[0] === 'reset-password';
+    if (!session && !onSignIn && !onReset) router.replace('/sign-in');
     if (session && onSignIn) router.replace('/');
   }, [session, loading, segments, router]);
 
@@ -55,6 +57,7 @@ function Gate() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="sign-in" options={{ headerShown: false }} />
       <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
+      <Stack.Screen name="reset-password" options={{ headerShown: false }} />
       <Stack.Screen name="doctors/index" options={{ title: 'Find a doctor' }} />
       <Stack.Screen name="doctors/[id]" options={{ title: 'Book a visit' }} />
       <Stack.Screen name="pay/[appointmentId]" options={{ title: 'Pay for your visit' }} />
