@@ -18,6 +18,7 @@ type Doctor = {
   fee_audio_kobo: number;
   fee_clinic_kobo: number;
   slot_minutes: number;
+  licence_body: string;
 };
 
 // weekday: 0 = Sunday ... 6 = Saturday, the same as JavaScript's Date.getDay()
@@ -64,7 +65,7 @@ export default function BookDoctor() {
       supabase
         .from('doctors')
         .select(
-          'id, display_name, specialty, bio, languages, years_experience, fee_video_kobo, fee_audio_kobo, fee_clinic_kobo, slot_minutes',
+          'id, display_name, specialty, bio, languages, years_experience, fee_video_kobo, fee_audio_kobo, fee_clinic_kobo, slot_minutes, licence_body',
         )
         .eq('id', id)
         .maybeSingle(),
@@ -151,7 +152,7 @@ export default function BookDoctor() {
                 {doctor.specialty}
                 {doctor.years_experience != null ? ` · ${doctor.years_experience} years` : ''}
               </Text>
-              <Text style={styles.verified}>Licence verified by MDCN</Text>
+              <Text style={styles.verified}>Licence verified by {doctor.licence_body}</Text>
             </View>
           </View>
           {doctor.bio ? <Text style={styles.meta}>{doctor.bio}</Text> : null}

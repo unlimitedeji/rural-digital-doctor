@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Avatar, Loading, Message } from '@/components/ui';
+import { providerLabel } from '@/lib/catalog';
 import { supabase } from '@/lib/supabase';
 import { colors, naira, radius } from '@/lib/theme';
 
@@ -13,6 +14,7 @@ type Doctor = {
   years_experience: number | null;
   fee_video_kobo: number;
   accepting_now: boolean;
+  provider_type: string;
 };
 
 export default function Doctors() {
@@ -24,7 +26,7 @@ export default function Doctors() {
   useEffect(() => {
     supabase
       .from('doctors')
-      .select('id, display_name, specialty, languages, years_experience, fee_video_kobo, accepting_now')
+      .select('id, display_name, specialty, languages, years_experience, fee_video_kobo, accepting_now, provider_type')
       .eq('verified', true)
       .order('accepting_now', { ascending: false })
       .order('display_name')
@@ -69,6 +71,7 @@ export default function Doctors() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.name}>{item.display_name}</Text>
                 <Text style={styles.meta}>
+                  {item.provider_type !== 'doctor' ? `${providerLabel(item.provider_type)} · ` : ''}
                   {item.specialty}
                   {item.years_experience != null ? ` · ${item.years_experience} yrs` : ''}
                 </Text>

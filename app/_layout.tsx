@@ -5,11 +5,13 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Button, Loading } from '@/components/ui';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { LockProvider, useLock } from '@/lib/lock';
+import { ProfileProvider, useProfile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/lib/theme';
 
 function Gate() {
   const { session, loading } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const lock = useLock();
   const segments = useSegments();
   const router = useRouter();
@@ -29,6 +31,15 @@ function Gate() {
     if (!session && !onSignIn && !onReset) router.replace('/sign-in');
     if (session && onSignIn) router.replace('/');
   }, [session, loading, segments, router]);
+
+  // Everyone agrees to the privacy notice and fills in basic details once, before using the app.
+  useEffect(() => {
+    if (!session || profileLoading || !profile) return;
+    const here = segments[0];
+    const exempt = here === 'onboarding' || here === 'privacy' || here === 'reset-password';
+    if (!profile.consent_at && !exempt) router.replace('/onboarding');
+    if (profile.consent_at && here === 'onboarding') router.replace('/');
+  }, [session, profile, profileLoading, segments, router]);
 
   if (loading || !lock.ready) return <Loading />;
 
@@ -58,6 +69,9 @@ function Gate() {
       <Stack.Screen name="sign-in" options={{ headerShown: false }} />
       <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
       <Stack.Screen name="reset-password" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="privacy" options={{ title: 'Privacy notice' }} />
+      <Stack.Screen name="join" options={{ title: 'Join as a provider' }} />
       <Stack.Screen name="doctors/index" options={{ title: 'Find a doctor' }} />
       <Stack.Screen name="doctors/[id]" options={{ title: 'Book a visit' }} />
       <Stack.Screen name="pay/[appointmentId]" options={{ title: 'Pay for your visit' }} />
@@ -70,10 +84,12 @@ function Gate() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <LockProvider>
-        <StatusBar style="dark" />
-        <Gate />
-      </LockProvider>
+      <ProfileProvider>
+        <LockProvider>
+          <StatusBar style="dark" />
+          <Gate />
+        </LockProvider>
+      </ProfileProvider>
     </AuthProvider>
   );
 }

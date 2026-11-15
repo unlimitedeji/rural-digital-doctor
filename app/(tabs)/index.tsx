@@ -64,6 +64,7 @@ export default function Home() {
 
   // Doctors have their own screens; send them to their queue.
   if (profile?.role === 'doctor') return <Redirect href="/queue" />;
+  if (profile?.role === 'partner') return <Redirect href="/orders" />;
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -117,6 +118,16 @@ export default function Home() {
             </Pressable>
           ))
         )}
+
+        {profile?.role === 'patient' ? (
+          <Pressable accessibilityRole="button" onPress={() => router.push('/join')} style={styles.doctorRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.doctorName}>Are you a health worker, pharmacy or lab?</Text>
+              <Text style={styles.cardText}>Apply to join Rural Digital Doctor</Text>
+            </View>
+            <Text style={styles.fee}>Join</Text>
+          </Pressable>
+        ) : null}
 
         <Text style={styles.section}>Security</Text>
         <FingerprintRow />

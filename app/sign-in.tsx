@@ -59,8 +59,14 @@ export default function SignIn() {
         password,
         options: { data: { full_name: fullName.trim() } },
       });
-      if (error) setNotice({ text: error.message, error: true });
-      else if (data.user && data.user.identities?.length === 0) {
+      if (error) {
+        setNotice({
+          text: error.message.toLowerCase().includes('rate limit')
+            ? 'Too many emails were sent in the last hour. Please try again in an hour.'
+            : error.message,
+          error: true,
+        });
+      } else if (data.user && data.user.identities?.length === 0) {
         // Supabase sends no email when the address already has an account.
         setCreating(false);
         setNotice({ text: 'This email already has an account. Sign in, or tap Forgot password.', error: true });

@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Card, Loading, Message } from '@/components/ui';
+import { Button, Card, Chip, Loading, Message } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { colors, formatWhen, modeLabels, radius, type VisitMode } from '@/lib/theme';
@@ -40,6 +40,10 @@ export default function DoctorVisit() {
   const [summary, setSummary] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
   const [items, setItems] = useState<Item[]>([{ ...EMPTY_ITEM }]);
+  const [labTests, setLabTests] = useState<string[]>(['']);
+  const [referTo, setReferTo] = useState('');
+  const [referReason, setReferReason] = useState('');
+  const [urgency, setUrgency] = useState<'routine' | 'soon' | 'urgent'>('routine');
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
@@ -104,6 +108,11 @@ export default function DoctorVisit() {
       return;
     }
     const filled = items.filter((i) => i.medicine.trim() && i.instructions.trim());
+    const tests = labTests.map((t) => t.trim()).filter(Boolean);
+    if (referTo.trim() && !referReason.trim()) {
+      setNotice({ text: 'Write the reason for the referral.', error: true });
+      return;
+    }
     setBusy(true);
     setNotice(null);
     const s = await supabase.from('visit_summaries').upsert({ appointment_id: visit.id, patient_summary: summary.trim() });
@@ -130,6 +139,27 @@ export default function DoctorVisit() {
         }));
         failed = !!(await supabase.from('prescription_items').insert(rows)).error;
       }
+    }
+    if (!failed && tests.length > 0) {
+      const rows = tests.map((test_name) => ({
+        appointment_id: visit.id,
+        doctor_id: doctorId,
+        patient_id: visit.patient_id,
+        test_name,
+      }));
+      failed = !!(await supabase.from('lab_orders').insert(rows)).error;
+    }
+    if (!failed && referTo.trim()) {
+      failed = !!(
+        await supabase.from('referrals').insert({
+          appointment_id: visit.id,
+          doctor_id: doctorId,
+          patient_id: visit.patient_id,
+          refer_to: referTo.trim(),
+          reason: referReason.trim(),
+          urgency,
+        })
+      ).error;
     }
     setBusy(false);
     if (!failed) setSent(true);
@@ -238,6 +268,53 @@ export default function DoctorVisit() {
           </View>
         ))}
         <Button label="Add medicine" variant="outline" onPress={() => setItems([...items, { ...EMPTY_ITEM }])} />
+
+        <Text style={styles.heading}>Lab tests</Text>
+        {labTests.map((t, i) => (
+          <TextInput
+            key={i}
+            style={styles.input}
+            value={t}
+            onChangeText={(v) => setLabTests(labTests.map((x, j) => (j === i ? v : x)))}
+            placeholder="Test name, for example Malaria RDT"
+            placeholderTextColor={colors.muted}
+            accessibilityLabel={`Lab test ${i + 1}`}
+          />
+        ))}
+        <Button label="Add lab test" variant="outline" onPress={() => setLabTests([...labTests, ''])} />
+
+        <Text style={styles.heading}>Referral</Text>
+        <TextInput
+          style={styles.input}
+          value={referTo}
+          onChangeText={setReferTo}
+          placeholder="Refer to, for example General Hospital Ikire"
+          placeholderTextColor={colors.muted}
+          accessibilityLabel="Refer to"
+        />
+        {referTo.trim() ? (
+          <>
+            <TextInput
+              style={styles.input}
+              value={referReason}
+              onChangeText={setReferReason}
+              placeholder="Reason for referral"
+              placeholderTextColor={colors.muted}
+              accessibilityLabel="Reason for referral"
+            />
+            <View style={styles.row}>
+              {(['routine', 'soon', 'urgent'] as const).map((u) => (
+                <View key={u} style={{ flex: 1 }}>
+                  <Chip
+                    label={u === 'routine' ? 'Routine' : u === 'soon' ? 'Within days' : 'Urgent'}
+                    selected={urgency === u}
+                    onPress={() => setUrgency(u)}
+                  />
+                </View>
+              ))}
+            </View>
+          </>
+        ) : null}
 
         {notice ? <Text style={[styles.notice, { color: notice.error ? colors.danger : colors.brandDark }]}>{notice.text}</Text> : null}
       </ScrollView>
