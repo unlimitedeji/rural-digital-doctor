@@ -44,12 +44,15 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ tabBarIcon: icon('home'), tabBarLabel: label('Home'), ...show(patientTabs) }} />
       <Tabs.Screen name="visits" options={{ tabBarIcon: icon('calendar'), tabBarLabel: label('Visits'), ...show(patientTabs) }} />
-      <Tabs.Screen name="records" options={{ tabBarIcon: icon('document-text'), tabBarLabel: label('Records'), ...show(patientTabs) }} />
-      <Tabs.Screen name="wallet" options={{ tabBarIcon: icon('wallet'), tabBarLabel: label('Wallet'), ...show(patientTabs) }} />
+      <Tabs.Screen name="care" options={{ tabBarIcon: icon('heart'), tabBarLabel: label('Care'), ...show(patientTabs) }} />
       <Tabs.Screen name="review" options={{ tabBarIcon: icon('shield-checkmark'), tabBarLabel: label('Review'), ...show(['admin']) }} />
       <Tabs.Screen name="queue" options={{ tabBarIcon: icon('people'), tabBarLabel: label('Queue'), ...show(['doctor']) }} />
       <Tabs.Screen name="schedule" options={{ tabBarIcon: icon('time'), tabBarLabel: label('Schedule'), ...show(['doctor']) }} />
       <Tabs.Screen name="orders" options={{ tabBarIcon: icon('receipt'), tabBarLabel: label('Orders'), ...show(['partner']) }} />
+      <Tabs.Screen name="profile" options={{ tabBarIcon: icon('person'), tabBarLabel: label('Profile'), ...show(patientTabs) }} />
+      {/* Reached from Care and Profile, not shown in the tab bar. */}
+      <Tabs.Screen name="records" options={{ href: null }} />
+      <Tabs.Screen name="wallet" options={{ href: null }} />
     </Tabs>
   );
 }

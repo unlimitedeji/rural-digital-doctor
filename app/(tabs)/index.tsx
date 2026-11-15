@@ -3,7 +3,6 @@ import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState, type ComponentProps } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FingerprintRow } from '@/components/FingerprintRow';
 import { Avatar } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { useProfile } from '@/lib/profile';
@@ -39,6 +38,8 @@ export default function Home() {
   const [online, setOnline] = useState<DoctorRow[]>([]);
   const [balance, setBalance] = useState<number | null>(null);
   const [medicines, setMedicines] = useState<Medicine[]>([]);
+  // True once verified or a check is waiting, so the banner hides.
+  const [verified, setVerified] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
@@ -47,7 +48,7 @@ export default function Home() {
       let active = true;
       const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       (async () => {
-        const [visit, doctors, wallet, rx] = await Promise.all([
+        const [visit, doctors, wallet, rx, me, idCheck] = await Promise.all([
           supabase
             .from('appointments')
             .select('id, starts_at, mode, doctors(display_name, specialty)')
@@ -70,11 +71,14 @@ export default function Home() {
             .eq('patient_id', userId)
             .gte('created_at', monthAgo)
             .order('created_at', { ascending: false }),
+          supabase.from('profiles').select('identity_verified_at').eq('id', userId).maybeSingle(),
+          supabase.from('identity_verifications').select('id').eq('user_id', userId).eq('status', 'pending').limit(1),
         ]);
         if (!active) return;
         setNext((visit.data as unknown as NextVisit | null) ?? null);
         setOnline((doctors.data as DoctorRow[] | null) ?? []);
         setBalance(wallet.data?.balance_kobo ?? 0);
+        setVerified(!!me.data?.identity_verified_at || ((idCheck.data as unknown[] | null) ?? []).length > 0);
         type RxRow = {
           created_at: string;
           doctors: { display_name: string } | null;
@@ -110,9 +114,9 @@ export default function Home() {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Greeting */}
         <View style={styles.header}>
-          <View style={styles.headerAvatar}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Open profile" onPress={() => router.push('/profile')} style={styles.headerAvatar}>
             <Text style={styles.headerAvatarText}>{initials(profile?.full_name || 'You')}</Text>
-          </View>
+          </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={styles.greeting}>
               {greeting()}
@@ -120,10 +124,14 @@ export default function Home() {
             </Text>
             <Text style={styles.question}>How do you feel today?</Text>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Sign out" onPress={() => supabase.auth.signOut()} style={styles.iconButton}>
-            <Ionicons name="log-out-outline" size={22} color={colors.muted} />
-          </Pressable>
         </View>
+
+        {!verified ? (
+          <Pressable accessibilityRole="button" onPress={() => router.push('/verify')} style={styles.verifyBanner}>
+            <Text style={styles.verifyText}>Verify your identity</Text>
+            <Ionicons name="arrow-forward" size={18} color={colors.amberText} />
+          </Pressable>
+        ) : null}
 
         {/* Main call to action */}
         <View style={styles.hero}>
@@ -159,7 +167,7 @@ export default function Home() {
           <Tile icon="calendar" label="Book a visit" onPress={() => router.push('/doctors')} />
           <Tile icon="call" label="Emergency call" danger onPress={() => Linking.openURL(`tel:${EMERGENCY_NUMBER}`)} />
           <Tile icon="cloud-upload" label="Upload test results" onPress={() => router.push('/records')} />
-          <Tile icon="document-text" label="My visits" onPress={() => router.push('/visits')} />
+          <Tile icon="pulse" label="Share vitals" onPress={() => router.push('/vitals')} />
         </View>
 
         {/* Upcoming visit */}
@@ -245,8 +253,6 @@ export default function Home() {
           </Pressable>
         ) : null}
 
-        <Text style={styles.section}>Security</Text>
-        <FingerprintRow />
       </ScrollView>
     </SafeAreaView>
   );
@@ -280,7 +286,16 @@ const styles = StyleSheet.create({
   headerAvatarText: { fontSize: 18, fontWeight: '700', color: colors.brand },
   greeting: { fontSize: 15, color: colors.muted },
   question: { fontSize: 20, fontWeight: '700', color: colors.ink },
-  iconButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  verifyBanner: {
+    minHeight: 52,
+    backgroundColor: colors.amberTint,
+    borderRadius: radius.lg,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  verifyText: { fontSize: 16, fontWeight: '600', color: colors.amberText },
   hero: { backgroundColor: colors.brand, borderRadius: 24, padding: 20, gap: 8, overflow: 'hidden' },
   heroPattern: {
     position: 'absolute',

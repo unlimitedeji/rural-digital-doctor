@@ -72,6 +72,10 @@ function Gate() {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="privacy" options={{ title: 'Privacy notice' }} />
       <Stack.Screen name="join" options={{ title: 'Join as a provider' }} />
+      <Stack.Screen name="vitals" options={{ title: 'Vitals' }} />
+      <Stack.Screen name="health-record" options={{ title: 'Health record' }} />
+      <Stack.Screen name="verify" options={{ title: 'Verify your identity' }} />
+      <Stack.Screen name="profile-edit" options={{ title: 'My details' }} />
       <Stack.Screen name="doctors/index" options={{ title: 'Find a doctor' }} />
       <Stack.Screen name="doctors/[id]" options={{ title: 'Book a visit' }} />
       <Stack.Screen name="pay/[appointmentId]" options={{ title: 'Pay for your visit' }} />

@@ -1,11 +1,20 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Linking, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Loading } from '@/components/ui';
 import { PARTNER_KINDS, providerLabel } from '@/lib/catalog';
 import { supabase } from '@/lib/supabase';
 import { colors, naira, radius } from '@/lib/theme';
+
+type IdentityCheck = {
+  id: string;
+  address: string;
+  proof_path: string;
+  selfie_path: string;
+  created_at: string;
+  person: { full_name: string; phone: string | null } | null;
+};
 
 type Application = {
   id: string;
@@ -34,6 +43,7 @@ export default function Review() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reloads, setReloads] = useState(0);
+  const [checks, setChecks] = useState<IdentityCheck[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -46,6 +56,14 @@ export default function Review() {
         .then(({ data }) => {
           if (active) setItems((data as Application[] | null) ?? []);
         });
+      supabase
+        .from('identity_verifications')
+        .select('id, address, proof_path, selfie_path, created_at, person:profiles!identity_verifications_user_id_fkey(full_name, phone)')
+        .eq('status', 'pending')
+        .order('created_at')
+        .then(({ data }) => {
+          if (active) setChecks((data as unknown as IdentityCheck[] | null) ?? []);
+        });
       return () => {
         active = false;
       };
@@ -57,6 +75,25 @@ export default function Review() {
     setError(null);
     const { error: err } = await supabase.rpc('review_application', {
       p_application: id,
+      p_approve: approve,
+      p_note: notes[id]?.trim() || null,
+    });
+    setBusyId(null);
+    if (err) setError('Could not save the decision. Check your network and try again.');
+    else setReloads((n) => n + 1);
+  }
+
+  async function openFile(path: string) {
+    const signed = await supabase.storage.from('identity').createSignedUrl(path, 120);
+    if (signed.data?.signedUrl) Linking.openURL(signed.data.signedUrl);
+    else setError('Could not open the file.');
+  }
+
+  async function decideIdentity(id: string, approve: boolean) {
+    setBusyId(id);
+    setError(null);
+    const { error: err } = await supabase.rpc('review_identity', {
+      p_id: id,
       p_approve: approve,
       p_note: notes[id]?.trim() || null,
     });
@@ -84,6 +121,42 @@ export default function Review() {
           </View>
         }
         ListEmptyComponent={<Text style={styles.empty}>No applications waiting.</Text>}
+        ListFooterComponent={
+          <View style={{ gap: 12, marginTop: 12 }}>
+            <Text style={styles.title}>Identity checks</Text>
+            <Text style={styles.meta}>Check that the selfie, name and proof of address match before approving.</Text>
+            {checks.length === 0 ? <Text style={styles.empty}>No identity checks waiting.</Text> : null}
+            {checks.map((c) => (
+              <View key={c.id} style={styles.card}>
+                <Text style={styles.name}>{c.person?.full_name || 'Patient'}</Text>
+                {c.person?.phone ? <Text style={styles.meta}>Phone: {c.person.phone}</Text> : null}
+                <Text style={styles.meta}>Address: {c.address}</Text>
+                <View style={styles.row}>
+                  <Button label="View proof" variant="outline" onPress={() => openFile(c.proof_path)} style={{ flex: 1 }} />
+                  <Button label="View selfie" variant="outline" onPress={() => openFile(c.selfie_path)} style={{ flex: 1 }} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={notes[c.id] ?? ''}
+                  onChangeText={(t) => setNotes({ ...notes, [c.id]: t })}
+                  placeholder="Note to the person (shown if not approved)"
+                  placeholderTextColor={colors.muted}
+                  accessibilityLabel="Note to the person"
+                />
+                <View style={styles.row}>
+                  <Button label="Approve" onPress={() => decideIdentity(c.id, true)} busy={busyId === c.id} style={{ flex: 1 }} />
+                  <Button
+                    label="Not approved"
+                    variant="outline"
+                    onPress={() => decideIdentity(c.id, false)}
+                    disabled={busyId === c.id}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+              </View>
+            ))}
+          </View>
+        }
         renderItem={({ item }) => {
           const what =
             item.kind === 'provider'

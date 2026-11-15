@@ -6,6 +6,7 @@ import { Button, Card, Chip, Loading, Message } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { colors, formatWhen, modeLabels, radius, type VisitMode } from '@/lib/theme';
+import { formatVital, latestByKind, vitalInfo, type Vital } from '@/lib/vitals';
 
 type Visit = {
   id: string;
@@ -21,6 +22,8 @@ type Visit = {
     town: string | null;
     state: string | null;
     allergies: string | null;
+    conditions: string | null;
+    past_surgeries: string | null;
   } | null;
 };
 type SharedRecord = { id: string; title: string; kind: string; storage_paths: string[] };
@@ -34,6 +37,7 @@ export default function DoctorVisit() {
   const router = useRouter();
   const [visit, setVisit] = useState<Visit | null>(null);
   const [records, setRecords] = useState<SharedRecord[]>([]);
+  const [vitals, setVitals] = useState<Vital[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [viewer, setViewer] = useState<{ record: SharedRecord; url: string | null } | null>(null);
   const [finding, setFinding] = useState('');
@@ -53,7 +57,7 @@ export default function DoctorVisit() {
     const v = await supabase
       .from('appointments')
       .select(
-        'id, patient_id, starts_at, mode, status, reason, patient:profiles!appointments_patient_id_fkey(full_name, date_of_birth, sex, town, state, allergies)',
+        'id, patient_id, starts_at, mode, status, reason, patient:profiles!appointments_patient_id_fkey(full_name, date_of_birth, sex, town, state, allergies, conditions, past_surgeries)',
       )
       .eq('id', id)
       .maybeSingle();
@@ -66,6 +70,13 @@ export default function DoctorVisit() {
     // Row level security returns only the results this patient has shared with this doctor.
     const r = await supabase.from('records').select('id, title, kind, storage_paths').eq('patient_id', data.patient_id);
     setRecords((r.data as SharedRecord[] | null) ?? []);
+    const vit = await supabase
+      .from('vitals')
+      .select('id, kind, value_1, value_2, measured_at')
+      .eq('patient_id', data.patient_id)
+      .order('measured_at', { ascending: false })
+      .limit(50);
+    setVitals((vit.data as Vital[] | null) ?? []);
   }, [id]);
 
   useEffect(() => {
@@ -194,8 +205,24 @@ export default function DoctorVisit() {
             {formatWhen(visit.starts_at)} · {modeLabels[visit.mode].label} visit
           </Text>
           {p?.allergies ? <Text style={styles.allergy}>Allergy: {p.allergies}</Text> : null}
+          {p?.conditions ? <Text style={styles.meta}>Conditions: {p.conditions}</Text> : null}
+          {p?.past_surgeries ? <Text style={styles.meta}>Past operations: {p.past_surgeries}</Text> : null}
           {visit.reason ? <Text style={styles.meta}>Reason: {visit.reason}</Text> : null}
         </Card>
+
+        {latestByKind(vitals).length > 0 ? (
+          <>
+            <Text style={styles.heading}>Latest vitals</Text>
+            <Card style={{ gap: 4 }}>
+              {latestByKind(vitals).map((v) => (
+                <Text key={v.id} style={styles.meta}>
+                  {vitalInfo(v.kind).label}: {formatVital(v)} ·{' '}
+                  {new Date(v.measured_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}
+                </Text>
+              ))}
+            </Card>
+          </>
+        ) : null}
 
         <Text style={styles.heading}>Shared results and scans</Text>
         {records.length === 0 ? (
