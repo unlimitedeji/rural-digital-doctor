@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PasswordInput } from '@/components/PasswordInput';
 import { Button } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { colors, radius } from '@/lib/theme';
@@ -51,14 +52,7 @@ export default function ResetPassword() {
       {ready ? (
         <View style={styles.form}>
           <Text style={styles.label}>New password</Text>
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            accessibilityLabel="New password"
-          />
+          <PasswordInput value={password} onChangeText={setPassword} label="New password" />
           <Button label="Save password" onPress={save} busy={busy} />
         </View>
       ) : null}

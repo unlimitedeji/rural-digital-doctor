@@ -2,6 +2,7 @@ import * as Linking from 'expo-linking';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PasswordInput } from '@/components/PasswordInput';
 import { Button } from '@/components/ui';
 import { googleSignInAvailable, signInWithGoogle } from '@/lib/google';
 import { supabase } from '@/lib/supabase';
@@ -121,14 +122,7 @@ export default function SignIn() {
             </View>
             <View style={styles.field}>
               <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                accessibilityLabel="Password"
-              />
+              <PasswordInput value={password} onChangeText={setPassword} label="Password" />
             </View>
 
             {notice ? (
