@@ -3,14 +3,14 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Button, Loading } from '@/components/ui';
-import { AuthProvider, useAuth } from '@/lib/auth';
+import { AuthProvider, needsCode, useAuth } from '@/lib/auth';
 import { LockProvider, useLock } from '@/lib/lock';
 import { ProfileProvider, useProfile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/lib/theme';
 
 function Gate() {
-  const { session, loading } = useAuth();
+  const { session, loading, aal } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const lock = useLock();
   const segments = useSegments();
@@ -30,13 +30,15 @@ function Gate() {
     const onReset = segments[0] === 'reset-password';
     if (!session && !onSignIn && !onReset) router.replace('/sign-in');
     if (session && onSignIn) router.replace('/');
-  }, [session, loading, segments, router]);
+    // Accounts with two-step sign-in must enter a code before anything else.
+    if (session && needsCode(aal) && segments[0] !== 'two-step') router.replace('/two-step');
+  }, [session, loading, aal, segments, router]);
 
   // Everyone agrees to the privacy notice and fills in basic details once, before using the app.
   useEffect(() => {
     if (!session || profileLoading || !profile) return;
     const here = segments[0];
-    const exempt = here === 'onboarding' || here === 'privacy' || here === 'reset-password';
+    const exempt = here === 'onboarding' || here === 'privacy' || here === 'reset-password' || here === 'two-step';
     if (!profile.consent_at && !exempt) router.replace('/onboarding');
   }, [session, profile, profileLoading, segments, router]);
 
@@ -70,6 +72,8 @@ function Gate() {
       <Stack.Screen name="reset-password" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="privacy" options={{ title: 'Privacy notice' }} />
+      <Stack.Screen name="two-step" options={{ title: 'Two-step sign-in' }} />
+      <Stack.Screen name="delete-account" options={{ title: 'Delete my account' }} />
       <Stack.Screen name="join" options={{ title: 'Join as a provider' }} />
       <Stack.Screen name="vitals" options={{ title: 'Vitals' }} />
       <Stack.Screen name="health-record" options={{ title: 'Health record' }} />

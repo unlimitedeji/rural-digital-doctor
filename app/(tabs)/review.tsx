@@ -1,8 +1,9 @@
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Linking, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Loading } from '@/components/ui';
+import { useAuth } from '@/lib/auth';
 import { PARTNER_KINDS, providerLabel } from '@/lib/catalog';
 import { supabase } from '@/lib/supabase';
 import { colors, naira, radius } from '@/lib/theme';
@@ -15,6 +16,8 @@ type IdentityCheck = {
   created_at: string;
   person: { full_name: string; phone: string | null } | null;
 };
+
+type Deletion = { id: string; user_id: string; reason: string | null; created_at: string; name?: string };
 
 type Application = {
   id: string;
@@ -44,10 +47,26 @@ export default function Review() {
   const [error, setError] = useState<string | null>(null);
   const [reloads, setReloads] = useState(0);
   const [checks, setChecks] = useState<IdentityCheck[]>([]);
+  const [deletions, setDeletions] = useState<Deletion[]>([]);
+  const { aal } = useAuth();
+  const router = useRouter();
+  // The database refuses admin work unless this session passed two-step sign-in.
+  const secured = aal.current === 'aal2';
 
   useFocusEffect(
     useCallback(() => {
       let active = true;
+      if (!secured) return;
+      (async () => {
+        const { data } = await supabase.from('deletion_requests').select('id, user_id, reason, created_at').eq('status', 'pending').order('created_at');
+        const rows = (data as Deletion[] | null) ?? [];
+        if (rows.length) {
+          const people = await supabase.from('profiles').select('id, full_name').in('id', rows.map((r) => r.user_id));
+          const names = new Map(((people.data as { id: string; full_name: string }[] | null) ?? []).map((p) => [p.id, p.full_name]));
+          rows.forEach((r) => (r.name = names.get(r.user_id)));
+        }
+        if (active) setDeletions(rows);
+      })();
       supabase
         .from('provider_applications')
         .select('*')
@@ -67,7 +86,7 @@ export default function Review() {
       return () => {
         active = false;
       };
-    }, [reloads]),
+    }, [reloads, secured]),
   );
 
   async function decide(id: string, approve: boolean) {
@@ -100,6 +119,43 @@ export default function Review() {
     setBusyId(null);
     if (err) setError('Could not save the decision. Check your network and try again.');
     else setReloads((n) => n + 1);
+  }
+
+  async function eraseAccount(d: Deletion, approve: boolean) {
+    setBusyId(d.id);
+    setError(null);
+    if (approve) {
+      // Remove the person's identity photos first; the database step then erases their personal details.
+      const files = await supabase.from('identity_verifications').select('proof_path, selfie_path').eq('user_id', d.user_id);
+      const paths = ((files.data as { proof_path: string; selfie_path: string }[] | null) ?? []).flatMap((f) => [f.proof_path, f.selfie_path]);
+      if (paths.length) {
+        const removed = await supabase.storage.from('identity').remove(paths);
+        if (removed.error) {
+          setBusyId(null);
+          setError('Could not remove the identity photos. Try again.');
+          return;
+        }
+      }
+    }
+    const { error: err } = await supabase.rpc('review_deletion', { p_id: d.id, p_approve: approve, p_note: notes[d.id]?.trim() || null });
+    setBusyId(null);
+    if (err) setError('Could not save the decision. Check your network and try again.');
+    else setReloads((n) => n + 1);
+  }
+
+  if (!secured) {
+    return (
+      <SafeAreaView style={styles.screen} edges={['top']}>
+        <View style={[styles.list, { gap: 12 }]}>
+          <Text style={styles.title}>Review</Text>
+          <Text style={styles.meta}>
+            Admin work needs two-step sign-in: a code from an authenticator app as well as your password. This protects
+            patients' identity documents if your password is ever stolen.
+          </Text>
+          <Button label={aal.next === 'aal2' ? 'Enter my code' : 'Set up two-step sign-in'} onPress={() => router.push('/two-step')} />
+        </View>
+      </SafeAreaView>
+    );
   }
 
   if (!items) return <Loading />;
@@ -152,6 +208,31 @@ export default function Review() {
                     disabled={busyId === c.id}
                     style={{ flex: 1 }}
                   />
+                </View>
+              </View>
+            ))}
+            <Text style={styles.title}>Account deletion requests</Text>
+            <Text style={styles.meta}>
+              Erasing removes the person's personal details, vitals and identity photos. Clinical notes, prescriptions and
+              payments are kept as the law requires. Remove their sign-in afterwards in Supabase → Authentication → Users.
+            </Text>
+            {deletions.length === 0 ? <Text style={styles.empty}>No deletion requests waiting.</Text> : null}
+            {deletions.map((d) => (
+              <View key={d.id} style={styles.card}>
+                <Text style={styles.name}>{d.name || 'Account'}</Text>
+                <Text style={styles.meta}>Asked on {new Date(d.created_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+                {d.reason ? <Text style={styles.meta}>Reason: {d.reason}</Text> : null}
+                <TextInput
+                  style={styles.input}
+                  value={notes[d.id] ?? ''}
+                  onChangeText={(t) => setNotes({ ...notes, [d.id]: t })}
+                  placeholder="Note to the person (shown if declined)"
+                  placeholderTextColor={colors.muted}
+                  accessibilityLabel="Note to the person"
+                />
+                <View style={styles.row}>
+                  <Button label="Erase details" onPress={() => eraseAccount(d, true)} busy={busyId === d.id} style={{ flex: 1 }} />
+                  <Button label="Decline" variant="outline" onPress={() => eraseAccount(d, false)} disabled={busyId === d.id} style={{ flex: 1 }} />
                 </View>
               </View>
             ))}

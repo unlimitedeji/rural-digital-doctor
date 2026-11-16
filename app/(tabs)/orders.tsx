@@ -9,7 +9,8 @@ import { supabase } from '@/lib/supabase';
 import { colors, radius } from '@/lib/theme';
 
 type Partner = { id: string; kind: 'pharmacy' | 'lab'; name: string };
-type Patient = { full_name: string; phone: string | null } | null;
+// Partners see only a contact snapshot the patient sent with the order, never the patient's health profile.
+type Patient = { name?: string; phone?: string | null; allergies?: string | null } | null;
 type Rx = {
   id: string;
   created_at: string;
@@ -68,7 +69,7 @@ export default function Orders() {
         if (!active) return;
         setPartner(p);
         if (!p) return;
-        const patient = 'patient:profiles!prescriptions_patient_id_fkey(full_name, phone)';
+        const patient = 'patient:partner_contact';
         const [rx, lab] = await Promise.all([
           p.kind === 'pharmacy'
             ? supabase
@@ -80,7 +81,7 @@ export default function Orders() {
           p.kind === 'lab'
             ? supabase
                 .from('lab_orders')
-                .select('id, created_at, test_name, notes, status, patient:profiles!lab_orders_patient_id_fkey(full_name, phone)')
+                .select('id, created_at, test_name, notes, status, patient:partner_contact')
                 .eq('partner_id', p.id)
                 .order('created_at', { ascending: false })
             : Promise.resolve({ data: [] }),
@@ -150,10 +151,15 @@ export default function Orders() {
           return (
             <View style={styles.card}>
               <View style={styles.rowBetween}>
-                <Text style={styles.name}>{patient?.full_name || 'Patient'}</Text>
+                <Text style={styles.name}>{patient?.name || 'Patient'}</Text>
                 <Text style={styles.status}>{STATUS_LABEL[s] ?? s}</Text>
               </View>
               {patient?.phone ? <Text style={styles.meta}>Phone: {patient.phone}</Text> : null}
+              {item.kind === 'prescription' ? (
+                <Text style={[styles.meta, patient?.allergies ? { color: colors.danger, fontWeight: '700' } : null]}>
+                  Allergies: {patient?.allergies?.trim() || 'none recorded'}
+                </Text>
+              ) : null}
               <Text style={styles.meta}>
                 {new Date(item.row.created_at).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}
               </Text>

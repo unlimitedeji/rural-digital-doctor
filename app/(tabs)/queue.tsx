@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FingerprintRow } from '@/components/FingerprintRow';
-import { Avatar, Loading } from '@/components/ui';
+import { Avatar, Button, Loading } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { colors, formatWhen, modeLabels, radius, type VisitMode } from '@/lib/theme';
@@ -97,7 +97,12 @@ export default function Queue() {
           </View>
         }
         ListEmptyComponent={<Text style={styles.empty}>No paid visits waiting.</Text>}
-        ListFooterComponent={<FingerprintRow />}
+        ListFooterComponent={
+          <View style={{ gap: 12 }}>
+            <FingerprintRow />
+            <Button label="Two-step sign-in" variant="outline" onPress={() => router.push('/two-step')} />
+          </View>
+        }
         renderItem={({ item }) => (
           <Pressable
             accessibilityRole="button"

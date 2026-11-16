@@ -67,11 +67,10 @@ export default function SignIn() {
       });
       if (error) {
         setNotice({ text: authMessage(error, true), error: true });
-      } else if (data.user && data.user.identities?.length === 0) {
-        // Supabase sends no email when the address already has an account.
-        setCreating(false);
-        setNotice({ text: 'This email already has an account. Sign in, or tap Forgot password.', error: true });
-      } else if (!data.session) setNotice({ text: 'Check your email and tap the link to finish, then sign in.', error: false });
+      } else if (!data.session) {
+        // Same answer whether or not the email already has an account, so nobody can find out who uses Landu.
+        setNotice({ text: 'Check your email for our link, then sign in. Already have an account? Sign in, or tap Forgot password.', error: false });
+      }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) {

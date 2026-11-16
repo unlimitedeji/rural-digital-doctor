@@ -30,7 +30,8 @@
         "foregroundImage": "./assets/adaptive-foreground.png",
         "backgroundImage": "./assets/adaptive-background.png",
         "backgroundColor": "#3A0FA8"
-      }
+      },
+      "allowBackup": false
     },
     "ios": {
       "bundleIdentifier": "com.ruraldigitaldoctor.app",

@@ -96,7 +96,9 @@ export default function Profile() {
         <View style={styles.list}>
           <Row icon="pulse" label="Vitals" onPress={() => router.push('/vitals')} />
           <Row icon="document-text" label="Test results and scans" onPress={() => router.push('/records')} />
-          <Row icon="lock-closed" label="Privacy notice" onPress={() => router.push('/privacy')} last />
+          <Row icon="shield-checkmark" label="Two-step sign-in" onPress={() => router.push('/two-step')} />
+          <Row icon="lock-closed" label="Privacy notice" onPress={() => router.push('/privacy')} />
+          <Row icon="trash" label="Delete my account" onPress={() => router.push('/delete-account')} last />
         </View>
 
         <FingerprintRow />
