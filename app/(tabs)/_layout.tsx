@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Loading } from '@/components/ui';
 import { useProfile } from '@/lib/profile';
 import { colors } from '@/lib/theme';
@@ -12,15 +13,15 @@ function icon(name: string) {
   return ({ focused }: { focused: boolean }) => (
     <Ionicons
       name={(focused ? name : `${name}-outline`) as IconName}
-      size={24}
-      color={focused ? colors.brand : colors.muted}
+      size={26}
+      color={focused ? colors.brand : colors.ink}
     />
   );
 }
 
 function label(text: string) {
   return ({ focused }: { focused: boolean }) => (
-    <Text style={{ fontSize: 13, fontWeight: focused ? '700' : '600', color: focused ? colors.brand : colors.muted }}>
+    <Text style={{ fontSize: 13, fontWeight: focused ? '700' : '600', color: focused ? colors.brand : colors.ink, marginTop: 2 }}>
       {text}
     </Text>
   );
@@ -28,6 +29,8 @@ function label(text: string) {
 
 export default function TabsLayout() {
   const { profile, loading } = useProfile();
+  // Keeps the tab bar above the phone's own back/home buttons or gesture bar.
+  const insets = useSafeAreaInsets();
   if (loading) return <Loading />;
 
   const role = profile?.role ?? 'patient';
@@ -39,7 +42,13 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.line, height: 72, paddingTop: 6 },
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          borderTopColor: colors.line,
+          height: 68 + insets.bottom,
+          paddingTop: 8,
+          paddingBottom: insets.bottom + 8,
+        },
       }}
     >
       <Tabs.Screen name="index" options={{ tabBarIcon: icon('home'), tabBarLabel: label('Home'), ...show(patientTabs) }} />
