@@ -12,5 +12,8 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // PKCE: sign-in and reset links carry a one-time code that only works on the phone that asked for it,
+    // so a link someone else sends cannot sign this phone into their account.
+    flowType: 'pkce',
   },
 });

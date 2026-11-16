@@ -8,7 +8,8 @@ import { Button } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { colors, radius } from '@/lib/theme';
 
-// The password reset email opens the app here. The link carries a one-time session after the '#'.
+// The password reset email opens the app here. The link carries a one-time code (PKCE) that only works
+// on the phone that asked for the reset, so a link sent by someone else cannot sign this phone in.
 export default function ResetPassword() {
   const url = Linking.useURL();
   const router = useRouter();
@@ -19,17 +20,23 @@ export default function ResetPassword() {
 
   useEffect(() => {
     if (!url || ready) return;
-    const fragment = url.split('#')[1] ?? '';
-    const params = new URLSearchParams(fragment);
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
-    if (!accessToken || !refreshToken) {
-      setNotice({ text: params.get('error_description') ?? 'This reset link is not valid. Ask for a new one.', error: true });
+    let code: string | null = null;
+    try {
+      code = new URL(url).searchParams.get('code');
+    } catch {
+      code = null;
+    }
+    if (!code) {
+      setNotice({ text: 'This reset link is not valid. Ask for a new one.', error: true });
       return;
     }
-    supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ error }) => {
-      if (error) setNotice({ text: 'This reset link has expired. Ask for a new one.', error: true });
-      else setReady(true);
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (error) {
+        setNotice({
+          text: 'This link has expired, or was opened on a different phone. Ask for a new one on this phone.',
+          error: true,
+        });
+      } else setReady(true);
     });
   }, [url, ready]);
 

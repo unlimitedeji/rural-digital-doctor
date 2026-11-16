@@ -25,14 +25,9 @@ export async function signInWithGoogle(): Promise<string | null> {
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
   if (result.type !== 'success') return null;
 
-  // Supabase returns the session in the part of the address after '#'.
-  const fragment = result.url.split('#')[1] ?? result.url.split('?')[1] ?? '';
-  const params = new URLSearchParams(fragment);
-  const accessToken = params.get('access_token');
-  const refreshToken = params.get('refresh_token');
-  if (!accessToken || !refreshToken) {
-    return params.get('error_description') ?? 'Google sign-in did not complete. Please try again.';
-  }
-  const session = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+  // With PKCE, Google returns a one-time code that only this phone can exchange for a session.
+  const code = new URL(result.url).searchParams.get('code');
+  if (!code) return 'Google sign-in did not complete. Please try again.';
+  const session = await supabase.auth.exchangeCodeForSession(code);
   return session.error ? 'Google sign-in did not complete. Please try again.' : null;
 }

@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PasswordInput } from '@/components/PasswordInput';
 import { Button } from '@/components/ui';
 import { googleSignInAvailable, signInWithGoogle } from '@/lib/google';
+import { authMessage } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 import { colors, radius } from '@/lib/theme';
 
@@ -65,12 +66,7 @@ export default function SignIn() {
         options: { data: { full_name: fullName.trim() } },
       });
       if (error) {
-        setNotice({
-          text: error.message.toLowerCase().includes('rate limit')
-            ? 'Too many emails were sent in the last hour. Please try again in an hour.'
-            : error.message,
-          error: true,
-        });
+        setNotice({ text: authMessage(error, true), error: true });
       } else if (data.user && data.user.identities?.length === 0) {
         // Supabase sends no email when the address already has an account.
         setCreating(false);
@@ -79,12 +75,7 @@ export default function SignIn() {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) {
-        setNotice({
-          text: error.message.includes('Invalid login')
-            ? 'Wrong email or password. Tap Forgot password to choose a new one.'
-            : error.message,
-          error: true,
-        });
+        setNotice({ text: authMessage(error, false), error: true });
       }
     }
     setBusy(false);

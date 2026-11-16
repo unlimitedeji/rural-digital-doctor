@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Avatar, Button, Card, Chip, Loading, Message } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
+import { safeMessage } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 import { colors, modeLabels, naira, type VisitMode } from '@/lib/theme';
 
@@ -133,7 +134,7 @@ export default function BookDoctor() {
       setBookError(
         error.code === '23505'
           ? 'Someone just took that time. Please choose another.'
-          : 'Could not book this visit. Check your network and try again.',
+          : safeMessage(error, 'Could not book this visit. Check your network and try again.'),
       );
       return;
     }
