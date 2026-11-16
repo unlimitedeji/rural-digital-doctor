@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -67,8 +68,11 @@ export default function Onboarding() {
       setError('Could not save. Check your network and try again.');
       return;
     }
+    // Someone who chose "Join as a health worker" at sign-up goes straight to the application.
+    const join = await AsyncStorage.getItem('rdd.joinAfterSignup');
+    await AsyncStorage.removeItem('rdd.joinAfterSignup');
     await reload();
-    router.replace('/');
+    router.replace(join === 'yes' ? '/join' : '/');
   }
 
   return (

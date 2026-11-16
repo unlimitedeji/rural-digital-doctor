@@ -38,7 +38,6 @@ function Gate() {
     const here = segments[0];
     const exempt = here === 'onboarding' || here === 'privacy' || here === 'reset-password';
     if (!profile.consent_at && !exempt) router.replace('/onboarding');
-    if (profile.consent_at && here === 'onboarding') router.replace('/');
   }, [session, profile, profileLoading, segments, router]);
 
   if (loading || !lock.ready) return <Loading />;

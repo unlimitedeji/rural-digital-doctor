@@ -1,4 +1,5 @@
 import * as Linking from 'expo-linking';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +11,8 @@ import { colors, radius } from '@/lib/theme';
 
 export default function SignIn() {
   const [creating, setCreating] = useState(false);
+  // Health workers, pharmacies and labs go straight to the application after their first sign-in.
+  const [asProvider, setAsProvider] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -49,6 +52,7 @@ export default function SignIn() {
 
   async function submit() {
     setNotice(null);
+    if (creating) await AsyncStorage.setItem(JOIN_FLAG, asProvider ? 'yes' : 'no');
     if (!email.trim() || password.length < 8 || (creating && !fullName.trim())) {
       setNotice({ text: 'Enter your details. The password needs at least 8 characters.', error: true });
       return;
@@ -91,7 +95,9 @@ export default function SignIn() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Text style={styles.brand}>Rural Digital Doctor</Text>
-          <Text style={styles.title}>{creating ? 'Create your account' : 'Welcome back'}</Text>
+          <Text style={styles.title}>
+            {creating ? (asProvider ? 'Join as a health worker' : 'Create your account') : 'Welcome back'}
+          </Text>
           <Text style={styles.lead}>See a licensed doctor from wherever you are.</Text>
 
           <View style={styles.form}>
@@ -149,13 +155,47 @@ export default function SignIn() {
               </Text>
             </Pressable>
           </View>
+
+          <View style={styles.providerCard}>
+            <Text style={styles.providerTitle}>Doctor, nurse, pharmacy or lab?</Text>
+            <Text style={styles.providerText}>
+              Create your account here, then send your licence details. We check them before you can see patients.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setCreating(true);
+                setAsProvider(true);
+                setNotice(null);
+              }}
+              style={styles.providerButton}
+            >
+              <Text style={styles.providerButtonText}>Join as a health worker or partner</Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
+export const JOIN_FLAG = 'rdd.joinAfterSignup';
+
 const styles = StyleSheet.create({
+  providerCard: { marginTop: 24, backgroundColor: colors.card, borderRadius: 18, padding: 16, gap: 8 },
+  providerTitle: { fontSize: 16, fontWeight: '700', color: colors.ink },
+  providerText: { fontSize: 14, lineHeight: 20, color: colors.muted },
+  providerButton: {
+    minHeight: 48,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.brand,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    marginTop: 4,
+  },
+  providerButtonText: { fontSize: 15, fontWeight: '600', color: colors.brand },
   screen: { flex: 1, backgroundColor: colors.ground },
   content: { padding: 24, paddingTop: 48, gap: 8 },
   brand: { fontSize: 14, fontWeight: '700', color: colors.brand },
