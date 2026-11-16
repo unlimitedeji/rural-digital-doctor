@@ -25,7 +25,12 @@
       ]
     ],
     "android": {
-      "package": "com.ruraldigitaldoctor.app"
+      "package": "com.ruraldigitaldoctor.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-foreground.png",
+        "backgroundImage": "./assets/adaptive-background.png",
+        "backgroundColor": "#3A0FA8"
+      }
     },
     "ios": {
       "bundleIdentifier": "com.ruraldigitaldoctor.app",
@@ -36,6 +41,7 @@
       "eas": {
         "projectId": "961719ed-5a31-4b26-88ec-d261d097bb7d"
       }
-    }
+    },
+    "icon": "./assets/icon.png"
   }
 }
