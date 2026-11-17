@@ -73,6 +73,7 @@ function Gate() {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="privacy" options={{ title: 'Privacy notice' }} />
       <Stack.Screen name="two-step" options={{ title: 'Two-step sign-in' }} />
+      <Stack.Screen name="call/[id]" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="delete-account" options={{ title: 'Delete my account' }} />
       <Stack.Screen name="join" options={{ title: 'Join as a provider' }} />
       <Stack.Screen name="vitals" options={{ title: 'Vitals' }} />

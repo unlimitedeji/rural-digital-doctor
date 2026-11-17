@@ -4,6 +4,7 @@ import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card, Chip, Loading, Message } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
+import { callWindow, isCallVisit } from '@/lib/call';
 import { supabase } from '@/lib/supabase';
 import { colors, formatWhen, modeLabels, radius, type VisitMode } from '@/lib/theme';
 import { formatVital, latestByKind, vitalInfo, type Vital } from '@/lib/vitals';
@@ -12,6 +13,7 @@ type Visit = {
   id: string;
   patient_id: string;
   starts_at: string;
+  ends_at: string;
   mode: VisitMode;
   status: 'confirmed' | 'in_progress' | 'completed' | 'no_show' | 'cancelled' | 'pending_payment';
   reason: string | null;
@@ -57,7 +59,7 @@ export default function DoctorVisit() {
     const v = await supabase
       .from('appointments')
       .select(
-        'id, patient_id, starts_at, mode, status, reason, patient:profiles!appointments_patient_id_fkey(full_name, date_of_birth, sex, town, state, allergies, conditions, past_surgeries)',
+        'id, patient_id, starts_at, ends_at, mode, status, reason, patient:profiles!appointments_patient_id_fkey(full_name, date_of_birth, sex, town, state, allergies, conditions, past_surgeries)',
       )
       .eq('id', id)
       .maybeSingle();
@@ -236,9 +238,24 @@ export default function DoctorVisit() {
           ))
         )}
 
+        {isCallVisit(visit) && callWindow(visit) === 'open' ? (
+          <Button
+            label={visit.status === 'in_progress' ? 'Rejoin call' : visit.mode === 'video' ? 'Join video call' : 'Join audio call'}
+            onPress={() => router.push({ pathname: '/call/[id]', params: { id: visit.id } })}
+          />
+        ) : null}
+        {isCallVisit(visit) && callWindow(visit) === 'early' ? (
+          <Text style={styles.meta}>The call opens 10 minutes before the visit time.</Text>
+        ) : null}
         {visit.status === 'confirmed' ? (
           <View style={styles.row}>
-            <Button label="Start visit" onPress={() => setStatus('in_progress')} busy={busy} style={{ flex: 1 }} />
+            <Button
+              label={isCallVisit(visit) ? 'Start without call' : 'Start visit'}
+              variant={isCallVisit(visit) ? 'outline' : 'primary'}
+              onPress={() => setStatus('in_progress')}
+              busy={busy}
+              style={{ flex: 1 }}
+            />
             <Button label="Patient absent" variant="outline" onPress={() => setStatus('no_show')} disabled={busy} style={{ flex: 1 }} />
           </View>
         ) : null}

@@ -4,12 +4,14 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Avatar, Button, Loading, Message } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
+import { callWindow, isCallVisit } from '@/lib/call';
 import { supabase } from '@/lib/supabase';
 import { colors, formatWhen, modeLabels, naira, radius, type VisitMode } from '@/lib/theme';
 
 type Visit = {
   id: string;
   starts_at: string;
+  ends_at: string;
   mode: VisitMode;
   status: 'pending_payment' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
   fee_kobo: number;
@@ -49,7 +51,7 @@ export default function Visits() {
       let active = true;
       supabase
         .from('appointments')
-        .select('id, starts_at, mode, status, fee_kobo, doctors(display_name, specialty)')
+        .select('id, starts_at, ends_at, mode, status, fee_kobo, doctors(display_name, specialty)')
         .eq('patient_id', userId)
         .order('starts_at', { ascending: false })
         .then(({ data, error: err }) => {
@@ -95,6 +97,15 @@ export default function Visits() {
                 onPress={() => router.push({ pathname: '/pay/[appointmentId]', params: { appointmentId: item.id } })}
               />
             ) : null}
+            {isCallVisit(item) && callWindow(item) === 'open' ? (
+              <Button
+                label={item.mode === 'video' ? 'Join video call' : 'Join audio call'}
+                onPress={() => router.push({ pathname: '/call/[id]', params: { id: item.id } })}
+              />
+            ) : null}
+            {isCallVisit(item) && callWindow(item) === 'early' ? (
+              <Text style={styles.callNote}>The call button appears here 10 minutes before your visit.</Text>
+            ) : null}
             {item.status === 'completed' || item.status === 'in_progress' ? (
               <Button
                 label="View summary and medicine"
@@ -113,6 +124,7 @@ export default function Visits() {
 }
 
 const styles = StyleSheet.create({
+  callNote: { fontSize: 14, color: colors.muted, lineHeight: 20 },
   screen: { flex: 1, backgroundColor: colors.ground },
   title: { fontSize: 26, fontWeight: '700', color: colors.ink, paddingHorizontal: 20, paddingTop: 20 },
   list: { padding: 20, gap: 12 },
