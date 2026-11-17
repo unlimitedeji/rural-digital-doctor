@@ -47,7 +47,7 @@ function Gate() {
   if (mustUnlock) {
     return (
       <View style={lockStyles.screen}>
-        <Text style={lockStyles.brand}>Rural Digital Doctor</Text>
+        <Text style={lockStyles.brand}>LanDu</Text>
         <Text style={lockStyles.title}>Locked</Text>
         <Text style={lockStyles.note}>Use your fingerprint to open your health records.</Text>
         <Button label="Unlock" onPress={() => lock.unlock()} style={{ alignSelf: 'stretch' }} />

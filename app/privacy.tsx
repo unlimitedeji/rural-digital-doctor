@@ -6,7 +6,7 @@ import { colors } from '@/lib/theme';
 const SECTIONS: { heading: string; body: string }[] = [
   {
     heading: 'Who we are',
-    body: 'Rural Digital Doctor is run by [COMPANY NAME], [REGISTERED ADDRESS]. Contact our data protection officer at [EMAIL].',
+    body: 'LanDu is run by [COMPANY NAME], [REGISTERED ADDRESS]. Contact our data protection officer at [EMAIL].',
   },
   {
     heading: 'What we collect',
@@ -34,7 +34,7 @@ const SECTIONS: { heading: string; body: string }[] = [
   },
   {
     heading: 'Not for emergencies',
-    body: 'Rural Digital Doctor is not an emergency service. If someone is in danger, go to the nearest health facility now.',
+    body: 'LanDu is not an emergency service. If someone is in danger, go to the nearest health facility now.',
   },
 ];
 

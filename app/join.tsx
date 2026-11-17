@@ -191,7 +191,7 @@ export default function Join() {
       >
         <View style={[styles.box, consent && styles.boxOn]}>{consent ? <Text style={styles.tick}>✓</Text> : null}</View>
         <Text style={styles.checkText}>
-          I confirm these details are true and allow Rural Digital Doctor to check my licence with the {body}.
+          I confirm these details are true and allow LanDu to check my licence with the {body}.
         </Text>
       </Pressable>
 

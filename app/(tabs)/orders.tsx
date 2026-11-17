@@ -123,7 +123,7 @@ export default function Orders() {
           <View style={{ gap: 12 }}>
             <View style={styles.header}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.brand}>Rural Digital Doctor · partner</Text>
+                <Text style={styles.brand}>LanDu · partner</Text>
                 <Text style={styles.title}>{partner?.name ?? 'Orders'}</Text>
               </View>
               <Pressable accessibilityRole="button" onPress={() => supabase.auth.signOut()} style={styles.signOut}>

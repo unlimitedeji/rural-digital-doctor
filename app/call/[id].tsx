@@ -68,7 +68,7 @@ export default function CallScreen() {
         const got = await PermissionsAndroid.requestMultiple(wanted);
         if (got[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] !== PermissionsAndroid.RESULTS.GRANTED) {
           setPhase('error');
-          setMessage('Landu needs the microphone for calls. Allow it in your phone settings, then try again.');
+          setMessage('LanDu needs the microphone for calls. Allow it in your phone settings, then try again.');
           return;
         }
       }

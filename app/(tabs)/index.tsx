@@ -247,7 +247,7 @@ export default function Home() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.medName}>Health worker, pharmacy or lab?</Text>
-              <Text style={styles.muted}>Apply to join Rural Digital Doctor</Text>
+              <Text style={styles.muted}>Apply to join LanDu</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={colors.muted} />
           </Pressable>

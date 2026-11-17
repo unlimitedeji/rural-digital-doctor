@@ -78,7 +78,7 @@ export default function Onboarding() {
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.brand}>Rural Digital Doctor</Text>
+        <Text style={styles.brand}>LanDu</Text>
         <Text style={styles.title}>A few details first</Text>
         <Text style={styles.lead}>Your doctor sees these before your visit, so you don't have to repeat them.</Text>
 
@@ -124,7 +124,7 @@ export default function Onboarding() {
             style={styles.checkRow}
           >
             <View style={[styles.box, agreed && styles.boxOn]}>{agreed ? <Text style={styles.tick}>✓</Text> : null}</View>
-            <Text style={styles.checkText}>I agree to the privacy notice and to Rural Digital Doctor storing my health information.</Text>
+            <Text style={styles.checkText}>I agree to the privacy notice and to LanDu storing my health information.</Text>
           </Pressable>
         </View>
 

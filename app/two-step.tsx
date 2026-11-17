@@ -99,7 +99,7 @@ export default function TwoStep() {
         {asking ? (
           <>
             <Text style={styles.title}>Enter your code</Text>
-            <Text style={styles.note}>Open your authenticator app and type the 6-digit code for Landu.</Text>
+            <Text style={styles.note}>Open your authenticator app and type the 6-digit code for LanDu.</Text>
             <CodeInput value={code} onChange={setCode} />
             <Button label="Continue" onPress={() => check(factor!.id)} busy={busy} />
             <Button label="Sign out" variant="outline" onPress={() => supabase.auth.signOut()} />

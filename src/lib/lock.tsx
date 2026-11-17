@@ -58,7 +58,7 @@ export function LockProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const unlock = useCallback(async () => {
-    const ok = await check('Unlock Rural Digital Doctor');
+    const ok = await check('Unlock LanDu');
     if (ok) setUnlocked(true);
     return ok;
   }, []);

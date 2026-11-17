@@ -54,7 +54,7 @@ export default function ResetPassword() {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <Text style={styles.brand}>Rural Digital Doctor</Text>
+      <Text style={styles.brand}>LanDu</Text>
       <Text style={styles.title}>Choose a new password</Text>
       {ready ? (
         <View style={styles.form}>

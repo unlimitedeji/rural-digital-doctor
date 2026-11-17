@@ -69,7 +69,7 @@ export default function Queue() {
           <View style={{ gap: 12 }}>
             <View style={styles.header}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.brand}>Rural Digital Doctor · for doctors</Text>
+                <Text style={styles.brand}>LanDu · for doctors</Text>
                 <Text style={styles.title}>{name || 'Doctor'}</Text>
               </View>
               <Pressable accessibilityRole="button" onPress={() => supabase.auth.signOut()} style={styles.signOut}>

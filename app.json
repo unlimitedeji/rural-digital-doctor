@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Rural Digital Doctor",
+    "name": "LanDu",
     "slug": "dejiadenusi",
     "version": "0.1.0",
     "scheme": "ruraldigitaldoctor",
@@ -12,15 +12,15 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Rural Digital Doctor uses the camera so you can photograph test results and scans for your doctor.",
-          "photosPermission": "Rural Digital Doctor opens your photos so you can share test results and scans with your doctor."
+          "cameraPermission": "LanDu uses the camera so you can photograph test results and scans for your doctor.",
+          "photosPermission": "LanDu opens your photos so you can share test results and scans with your doctor."
         }
       ],
       "expo-web-browser",
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Rural Digital Doctor uses Face ID to keep your health records private."
+          "faceIDPermission": "LanDu uses Face ID to keep your health records private."
         }
       ]
     ],
@@ -45,8 +45,8 @@
       "bundleIdentifier": "com.ruraldigitaldoctor.app",
       "supportsTablet": false,
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Landu uses the microphone for your doctor visits.",
-        "NSCameraUsageDescription": "Landu uses the camera for video visits and to photograph test results.",
+        "NSMicrophoneUsageDescription": "LanDu uses the microphone for your doctor visits.",
+        "NSCameraUsageDescription": "LanDu uses the camera for video visits and to photograph test results.",
         "UIBackgroundModes": [
           "audio"
         ]

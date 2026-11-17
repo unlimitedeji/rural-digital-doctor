@@ -68,7 +68,7 @@ export default function SignIn() {
       if (error) {
         setNotice({ text: authMessage(error, true), error: true });
       } else if (!data.session) {
-        // Same answer whether or not the email already has an account, so nobody can find out who uses Landu.
+        // Same answer whether or not the email already has an account, so nobody can find out who uses LanDu.
         setNotice({ text: 'Check your email for our link, then sign in. Already have an account? Sign in, or tap Forgot password.', error: false });
       }
     } else {
@@ -84,7 +84,7 @@ export default function SignIn() {
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.brand}>Rural Digital Doctor</Text>
+          <Text style={styles.brand}>LanDu</Text>
           <Text style={styles.title}>
             {creating ? (asProvider ? 'Join as a health worker' : 'Create your account') : 'Welcome back'}
           </Text>
