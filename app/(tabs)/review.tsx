@@ -168,6 +168,7 @@ export default function Review() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View style={{ gap: 6 }}>
+            <Button label="Invited doctors" variant="outline" onPress={() => router.push('/invites')} style={{ marginBottom: 10 }} />
             <Text style={styles.title}>Applications</Text>
             <Text style={styles.meta}>
               Check each licence with the licensing body before approving. Approved health workers appear to patients

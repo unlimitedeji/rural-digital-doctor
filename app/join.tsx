@@ -47,6 +47,14 @@ export default function Join() {
       .limit(1)
       .maybeSingle()
       .then(({ data }) => setExisting((data as Existing | null) ?? null));
+    supabase.rpc('my_invite').then(({ data }) => {
+      const inv = (data as { full_name: string; phone: string | null; mdcn_number: string | null; specialty: string | null }[] | null)?.[0];
+      if (!inv) return;
+      setFullName((v) => v || inv.full_name.replace(/^Dr\.?\s+/i, ''));
+      setPhone((v) => v || inv.phone || '');
+      setLicence((v) => v || inv.mdcn_number || '');
+      setSpecialty((v) => v || inv.specialty || '');
+    });
   }, [userId]);
 
   const body =
